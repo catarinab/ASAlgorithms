@@ -6,7 +6,6 @@
 #include <iostream>
 #include <tuple>
 #include <limits.h>
-#include <queue>
 #define NINF INT_MIN
 
 using namespace std;
@@ -16,7 +15,7 @@ class Graph {
         int nodes, edges, nSources = 0;
         list<int> *adjList;
         list<int> *adjListRev;
-        queue<int> qGraph;
+        stack<int> Stack;
 
     public:
         Graph(int n, int e) {
@@ -45,37 +44,29 @@ class Graph {
         void topologicalSortUtil(int v, bool visited[]);
         int longestPath(int s);
         void topOrder();
-        void topologicalSort();
 };
 
+void Graph::topologicalSortUtil(int v, bool visited[]){
+    visited[v] = true;
+   
+    list<int>::iterator i;
+    for (i = adjList[v].begin(); i != adjList[v].end(); ++i) {
+        int node = *i;
+        if (!visited[node])
+            topologicalSortUtil(node, visited);
+    }
+    printf("elemento da stack: %d\n", v);
+    Stack.push(v);
+}
 
-void Graph::topologicalSort(){
-    vector<int> in_degree(nodes, 0);
-  
-    for (int u = 0; u < nodes; u++) {
-        list<int>::iterator itr;
-        for (itr = adjList[u].begin();
-             itr != adjList[u].end(); itr++)
-            in_degree[*itr]++;
-    }
-  
-    queue<int> q;
+void Graph::topOrder(){
+    printf("Top order\n");
+    bool* visited = new bool[nodes];
     for (int i = 0; i < nodes; i++)
-        if (in_degree[i] == 0)
-            q.push(i);
-  
-    while (!q.empty()) {
-        int u = q.front();
-        q.pop();
-        qGraph.push(u);
-  
-        list<int>::iterator itr;
-        for (itr = adjList[u].begin();
-             itr != adjList[u].end(); itr++)
-  
-            if (--in_degree[*itr] == 0)
-                q.push(*itr);
-    }
+        visited[i] = false;
+    for (int i = 0; i < nodes; i++)
+        topologicalSortUtil(i, visited);
+    delete [] visited;
 }
 
 int Graph::longestPath(int s){
@@ -84,14 +75,14 @@ int Graph::longestPath(int s){
     for (int i = 0; i < nodes; i++)
         dist[i] = NINF;
     dist[s] = 1;
-    while (qGraph.empty() == false) {
-        int u = qGraph.front();
-        qGraph.pop();
+    while (Stack.empty() == false) {
+        int u = Stack.top();
+        Stack.pop();
    
         list<int>::iterator i;
         if (dist[u] != NINF) {
             for (i = adjList[u].begin(); i != adjList[u].end(); ++i){
-                //printf("Distancia de %d (i): %d e distancia de %d (u): %d\n", *i, dist[*i], u, dist[u]);
+                printf("Distancia de %d (i): %d e distancia de %d (u): %d\n", *i, dist[*i], u, dist[u]);
                 if (dist[*i] <= dist[u])
                     dist[*i] = dist[u] +1;
             }
@@ -125,9 +116,11 @@ string domino() {
     Graph g = buildGraph();
     vector<int> sources = g.getSources();
     int minIter = g.nSources, maxSize = 0;
+    g.topOrder();
     for (int i = 0; i < g.nSources; i++) {
-        g.topologicalSort();
         int size;
+        g.topOrder();
+        printf("Source: %d\n", i);
         size = g.longestPath(sources[i]);
         if (size > maxSize) {
             maxSize = size;

@@ -10,36 +10,29 @@ using namespace std;
 
 class Graph {
     public:
-        int nodes, edges, nSources = 0;
+        int nodes, edges, nSources;
         list<int> *adjList;
-        list<int> *adjListRev;
         vector<bool> visited;
+        vector<bool> sources;
         vector<int> depth;
         
     public:
         Graph(int n, int e) {
             nodes = n;
             edges = e;
+            nSources = nodes;
             adjList = new list<int>[nodes];
-            adjListRev = new list<int>[nodes];
             visited.resize(nodes, false);
+            sources.resize(nodes, true);
             depth.resize(nodes, 0);
         }
 
         void addEdge(int v1, int v2) {
             adjList[v1 - 1].push_front(v2 - 1);
-            adjListRev[v2 - 1].push_front(v1 - 1);
-        }
-
-        vector<int> getSources() {
-            vector<int> sources;
-            for (int i = 0; i < nodes; i++) {
-                if (adjListRev[i].empty()) {
-                    sources.push_back(i);
-                    nSources++;
-                }
+            if (sources[v2 -1]) {
+                sources[v2 - 1] = false;
+                nSources--;
             }
-            return sources;
         }
 
         int pseudoDFS(int s);
@@ -87,18 +80,23 @@ Graph buildGraph() {
 
 string domino() {
     Graph g = buildGraph();
-    vector<int> sources = g.getSources();
-    int minIter = g.nSources, maxSize = 0;
+    int minIter = g.nSources, maxSize = 0, indice = 0, source = 0;
 
     for (int i = 0; i < minIter; i++) {
-        int size;
-        size = g.pseudoDFS(sources[i]);
+        for (int j = indice; j < g.nodes; j++) {
+            if (g.sources[j]) {
+                source = j;
+                indice = j + 1;
+                break;
+            }
+        }
+        int size = g.pseudoDFS(source);
         if (size > maxSize) {
             maxSize = size;
         }
     }
     
-    return std::to_string(minIter) + " " + std::to_string(maxSize);
+    return to_string(minIter) + " " + to_string(maxSize);
 }
 
 int main() {

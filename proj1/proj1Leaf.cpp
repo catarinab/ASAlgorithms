@@ -2,31 +2,29 @@
 #include <list>
 #include <vector>
 #include <string>
-#include <stack>
 #include <iostream>
-#include <tuple>
 #include <queue>
 
 using namespace std;
 
 class Graph {
     public:
-        int nodes, edges, sources = 0;
-        list<int> *adjList;
-        list<int> *adjListRev;
+        int nodes, edges, sources = 0, nLeaves = 0;
+        vector<int> *adjList;
+        vector<int> *adjListRev;
         queue<int> leaves;
         
     public:
         Graph(int n, int e) {
             nodes = n;
             edges = e;
-            adjList = new list<int>[nodes];
-            adjListRev = new list<int>[nodes];
+            adjList = new vector<int>[nodes];
+            adjListRev = new vector<int>[nodes];
         }
 
         void addEdge(int v1, int v2) {
-            adjList[v1 - 1].push_front(v2 - 1);
-            adjListRev[v2 - 1].push_front(v1 - 1);
+            adjList[v1 - 1].push_back(v2 - 1);
+            adjListRev[v2 - 1].push_back(v1 - 1);
         }
 
         void updateInfo() {
@@ -36,6 +34,7 @@ class Graph {
                 }
                 if (adjList[i].empty()) {
                     leaves.push(i);
+                    nLeaves++;
                 }
             }
         }
@@ -45,26 +44,35 @@ class Graph {
 
 int Graph::getMaxDepth() {
     int maxDepth = 0;
-    
+    vector<bool> visited(nodes, false);
+
     if (!leaves.empty()) {
         maxDepth = 1;
-        while (1) {
-            //printf("while 1\n");
-            queue<int> parents;
-            while (!leaves.empty()) {
-                //printf("while 2\n");
+        while (!leaves.empty()) {
+            int parents = 0;
+            for (int i = 0; i < nLeaves; i++) {
                 int leaf = leaves.front();
+                printf("leaf: %d\n", leaf);
                 leaves.pop();
-                list<int>::iterator i;
-                for (i = adjListRev[leaf].begin(); i != adjListRev[leaf].end(); ++i) {
-                    parents.push(*i);
+                vector<int>::iterator j;
+                for (j = adjListRev[leaf].begin(); j != adjListRev[leaf].end(); ++j) {
+                    if(!visited[*j]){
+                        printf("No %d nao foi visitado ainda\n", *j);
+                        visited[*j] = true;
+                        leaves.push(*j);
+                        parents++; 
+                    }
+                    else {
+                        printf("No %d ja tinha sido visitado\n", *j);
+                    }
+                    
                 }
             }
-            if (parents.empty()) {
-                break;
+            printf("parents: %d\n", parents);
+            if (parents != 0) {
+                maxDepth++;
+                nLeaves = parents;
             }
-            maxDepth++;
-            leaves = parents;
         }
     }
 
