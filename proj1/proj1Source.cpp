@@ -4,7 +4,7 @@
 #include <string>
 #include <stack>
 #include <iostream>
-#include <tuple>
+#include <sys/time.h>
 
 using namespace std;
 
@@ -81,7 +81,6 @@ Graph buildGraph() {
 string domino() {
     Graph g = buildGraph();
     int minIter = g.nSources, maxSize = 0, indice = 0, source = 0;
-
     for (int i = 0; i < minIter; i++) {
         for (int j = indice; j < g.nodes; j++) {
             if (g.sources[j]) {

@@ -4,111 +4,88 @@
 #include <string>
 #include <stack>
 #include <iostream>
-#include <tuple>
-#include <limits.h>
-#include <queue>
-#define NINF INT_MIN
 
 using namespace std;
 
 class Graph {
     public:
-        int nodes, edges, nSources = 0;
-        list<int> *adjList;
-        list<int> *adjListRev;
-        queue<int> qGraph;
+        int nodes, edges, nSources;
+        vector<vector<int>> adjList;
+        vector<int> inDegree, sources, topOrder;
 
     public:
         Graph(int n, int e) {
             nodes = n;
             edges = e;
-            adjList = new list<int>[nodes];
-            adjListRev = new list<int>[nodes];
+            nSources = nodes;
+            adjList.resize(nodes);
+            inDegree.resize(nodes, 0);
         }
 
         void addEdge(int v1, int v2) {
-            adjList[v1 - 1].push_front(v2 - 1);
-            adjListRev[v2 - 1].push_front(v1 - 1);
-        }
-
-        vector<int> getSources() {
-            vector<int> sources;
-            for (int i = 0; i < nodes; i++) {
-                if (adjListRev[i].empty()) {
-                    sources.push_back(i);
-                    nSources++;
-                }
+            adjList[v1 - 1].push_back(v2 - 1);
+            if (inDegree[v2 - 1] == 0) {
+                nSources--;
             }
-            return sources;
+            inDegree[v2 - 1]++;
         }
 
-        void topologicalSortUtil(int v, bool visited[]);
-        int longestPath(int s);
-        void topOrder();
         void topologicalSort();
+
+        int longestPath(int s);
 };
 
-
 void Graph::topologicalSort(){
-    vector<int> in_degree(nodes, 0);
-  
-    for (int u = 0; u < nodes; u++) {
-        list<int>::iterator itr;
-        for (itr = adjList[u].begin();
-             itr != adjList[u].end(); itr++)
-            in_degree[*itr]++;
+    int iter = 0;
+    for (int i = 0; i < nodes; i++) {
+        if (inDegree[i] == 0) {
+            iter++;
+            sources.push_back(i);
+            topOrder.push_back(i);
+        }
+        if (iter == nSources) {
+            break;
+        }
     }
-  
-    queue<int> q;
-    for (int i = 0; i < nodes; i++)
-        if (in_degree[i] == 0)
-            q.push(i);
-  
-    while (!q.empty()) {
-        int u = q.front();
-        q.pop();
-        qGraph.push(u);
-  
-        list<int>::iterator itr;
-        for (itr = adjList[u].begin();
-             itr != adjList[u].end(); itr++)
-  
-            if (--in_degree[*itr] == 0)
-                q.push(*itr);
+
+    int quantity = nSources, indice = 0;
+    while (quantity != nodes) {
+        int v = topOrder[indice];
+        indice++;
+
+        vector<int>::iterator itr;
+        for (itr = adjList[v].begin(); itr != adjList[v].end(); itr++) {
+            if (--inDegree[*itr] == 0) {
+                topOrder.push_back(*itr);
+                quantity++;
+            }
+        }
     }
 }
 
 int Graph::longestPath(int s){
-    int dist[nodes];
-   
-    for (int i = 0; i < nodes; i++)
-        dist[i] = NINF;
-    dist[s] = 1;
-    while (qGraph.empty() == false) {
-        int u = qGraph.front();
-        qGraph.pop();
-   
-        list<int>::iterator i;
-        if (dist[u] != NINF) {
-            for (i = adjList[u].begin(); i != adjList[u].end(); ++i){
-                //printf("Distancia de %d (i): %d e distancia de %d (u): %d\n", *i, dist[*i], u, dist[u]);
-                if (dist[*i] <= dist[u])
-                    dist[*i] = dist[u] +1;
+    vector<int> depth(nodes, 0);
+    depth[s] = 1;
+
+    int longestPath = depth[s];
+    for (int i = 0; i < nodes; i++) {
+        int v = topOrder[i];
+        if (depth[v] != 0) {
+            vector<int>::iterator i;
+            for (i = adjList[v].begin(); i != adjList[v].end(); ++i){
+                if (depth[*i] <= depth[v]) {
+                    depth[*i] = depth[v] + 1;
+                    if (depth[*i] > longestPath) {
+                        longestPath = depth[*i];
+                    }
+                }
             }
         }
     }
-   
-    int longestPath = 0;
-    for (int i = 0; i < nodes; i++){
-        if(dist[i] != NINF && dist[i] > longestPath)
-            longestPath = dist[i];
-    }
-        
     
     return longestPath;
 }
    
-
 Graph buildGraph() {
     int nodes, edges;
     scanf("%d %d", &nodes, &edges);
@@ -123,18 +100,18 @@ Graph buildGraph() {
 
 string domino() {
     Graph g = buildGraph();
-    vector<int> sources = g.getSources();
-    int minIter = g.nSources, maxSize = 0;
-    for (int i = 0; i < g.nSources; i++) {
-        g.topologicalSort();
-        int size;
-        size = g.longestPath(sources[i]);
+    int minIter = g.nSources, maxSize = 0, source;
+
+    g.topologicalSort();
+    for (int i = 0; i < minIter; i++) {
+        source = g.sources[i];
+        int size = g.longestPath(source);
         if (size > maxSize) {
             maxSize = size;
         }
     }
     
-    return std::to_string(minIter) + " " + std::to_string(maxSize);
+    return to_string(minIter) + " " + to_string(maxSize);
 }
 
 int main() {
