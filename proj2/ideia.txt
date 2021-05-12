@@ -1,0 +1,3 @@
+X nos para cada processo sendo X o numero de processadores
+Cada nó tem tem X arcos onde X e o numero de processadores*o numero de processos
+o peso de cada arco é a comunicação entre os processos mais (o custo de estar nesse processador/numero de processadores)
