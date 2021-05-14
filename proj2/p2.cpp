@@ -22,7 +22,7 @@ class Program {
         vector<vector<int>> comCosts;
     public:
         Program(int nProcesses) {
-            processes.resize(nProcesses);
+            processes.resize(nProcesses, {0,0});
             comCosts.resize(nProcesses);
             for(int i = 0; nProcesses > 0; nProcesses--, i++) {
                 comCosts[i].resize(nProcesses, 0);
@@ -38,7 +38,9 @@ class Program {
            comCosts[id1][id2] = comCost;
        }
        
-       int getMinCost() {}        
+       int getMinCost() {
+           return 0;
+       }        
 };
 
 Program buildProgram() {
@@ -63,6 +65,7 @@ Program buildProgram() {
             program.addComCost(id2, id1, comCost);
         }
     }
+    return program;
 }
 
 int main() {
