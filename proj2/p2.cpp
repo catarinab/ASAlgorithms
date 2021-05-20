@@ -32,25 +32,24 @@ class Graph {
 
         bool bfs(int s, int t, int parent[]) {
             bool visited[numNodes];
+            queue<int> toVisit;
+            
             memset(visited, 0, sizeof(visited));
             
-            queue<int> q;
-            q.push(s);
+            toVisit.push(s);
             visited[s] = true;
             parent[s] = -1;
         
-            while (!q.empty()) {
-                int u = q.front();
-                q.pop();
+            while (!toVisit.empty()) {
+                int u = toVisit.front();
+                toVisit.pop();
 
                 for (int v = 0; v < numNodes; v++) {
                     if (visited[v] == false && adj[u][v] > 0) {
-                        if (v == t) {
-                            parent[v] = u;
-                            return true;
-                        }
-                        q.push(v);
                         parent[v] = u;
+                        if (v == t)
+                            return true;
+                        toVisit.push(v);
                         visited[v] = true;
                     }
                 }
@@ -60,26 +59,26 @@ class Graph {
         }
         
         int fordFulkerson(int s, int t) {
-            int u, v;
+            int vParent, v, maximumFlow = 0;
             int parent[numNodes];
-            int max_flow = 0;
         
             while (bfs(s, t, parent)) {
-                int path_flow = INT_MAX;
+                int currentPathFlow = INT_MAX;
                 for (v = t; v != s; v = parent[v]) {
-                    u = parent[v];
-                    path_flow = min(path_flow, adj[u][v]);
+                    vParent = parent[v];
+                    currentPathFlow = min(currentPathFlow, adj[vParent][v]);
                 }
         
                 for (v = t; v != s; v = parent[v]) {
-                    u = parent[v];
-                    adj[u][v] -= path_flow;
-                    adj[v][u] -= path_flow;
+                    vParent = parent[v];
+                    adj[vParent][v] -= currentPathFlow;
+                    if(v != 0 and v!= numNodes -1)
+                        adj[v][vParent] -= currentPathFlow;
                 }
-                max_flow += path_flow;
+                maximumFlow += currentPathFlow;
             }
         
-            return max_flow;
+            return maximumFlow;
         } 
 };
 
