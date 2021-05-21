@@ -8,17 +8,24 @@
 
 using namespace std;
 
-class Graph {
+typedef struct {
+    int maxCap;
+    int flow;
+    int rvFlow;
+} edge;
+
+class flowNetwork {
     public:
         int numNodes;
-        vector<vector<int>> adj;
+        vector<vector<edge>> adj;
 
     public:
-        Graph(int n) {
+        flowNetwork(int n) {
             numNodes = n;
             adj.resize(n);
             for (int i = 0; i < numNodes; i++) {
-                adj[i].resize(n, 0);
+                edge e{0, 0, 0};
+                adj[i].resize(n, e);
             }
         }
         
@@ -27,7 +34,9 @@ class Graph {
         }
 
         void addEdge(int v1, int v2, int weight) {
-            adj[v1][v2] = weight;
+            adj[v1][v2].maxCap = weight;
+            adj[v1][v2].flow = 0;
+            adj[v1][v2].rvFlow = 0;
         }
 
         bool bfs(int s, int t, int parent[]) {
@@ -45,7 +54,7 @@ class Graph {
                 toVisit.pop();
 
                 for (int v = 0; v < numNodes; v++) {
-                    if (visited[v] == false && adj[u][v] > 0) {
+                    if (visited[v] == false && adj[u][v].maxCap != 0 && (adj[u][v].flow < adj[u][v].maxCap)) {
                         parent[v] = u;
                         if (v == t)
                             return true;
@@ -66,14 +75,13 @@ class Graph {
                 int currentPathFlow = INT_MAX;
                 for (v = t; v != s; v = parent[v]) {
                     vParent = parent[v];
-                    currentPathFlow = min(currentPathFlow, adj[vParent][v]);
+                    currentPathFlow = min(currentPathFlow, adj[vParent][v].maxCap - adj[vParent][v].flow);
                 }
         
                 for (v = t; v != s; v = parent[v]) {
                     vParent = parent[v];
-                    adj[vParent][v] -= currentPathFlow;
-                    if(v != 0 and v!= numNodes -1)
-                        adj[v][vParent] -= currentPathFlow;
+                    adj[vParent][v].flow += currentPathFlow;
+                    adj[vParent][v].rvFlow -= currentPathFlow;
                 }
                 maximumFlow += currentPathFlow;
             }
@@ -86,11 +94,11 @@ class Graph {
 class Program {
     public:
         int nProcesses;
-        Graph *processes;
+        flowNetwork *processes;
 
     public:
         Program(int n) {
-            processes = new Graph(n + 2);
+            processes = new flowNetwork(n + 2);
             nProcesses = n;
         }
         
